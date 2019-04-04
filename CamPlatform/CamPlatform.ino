@@ -4,9 +4,11 @@
 #include <Servo.h>
 #include <string.h>
 #include <stdio.h>
+#define LED_PIN 
 // #define SOFT_START_CONTROL_PIN 12
-#define SERVO_PIN_1 11
-#define SERVO_PIN_2 12
+#define SERVO_PIN_1 10
+#define SERVO_PIN_2 11
+#define LED_PIN 2
 
 Servo sev_1; 
 Servo sev_2;
@@ -18,12 +20,16 @@ void setup() {
   delay(15);
   sev_2.attach(SERVO_PIN_2);
   delay(15);
- 
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  delay(2000);
+  digitalWrite(LED_PIN, HIGH);
 }
 
 void loop() {
 
-  int servo_array[3]; 
+  int servo_array[2]; 
   int flag_stop = 0; 
   int myTimeout = 5;
   Serial.setTimeout(myTimeout);
@@ -31,59 +37,58 @@ void loop() {
   if(Serial.available()){
 
     String message= Serial.readString();
-    
-    if (flag_stop == 0){
-      
-      int commaPosition;
-      int idx = 0; 
-      int str_fg;
-      String char_fg;
-      char fg;
-      do{
-        commaPosition = message.indexOf(',');
-        if(commaPosition != -1){
-          if (idx == 0){
-            fg = message.substring(0, commaPosition).charAt(0); 
-          }
-          if (idx != 0)
-          servo_array[idx] = message.substring(0,commaPosition).toInt();
-          message = message.substring(commaPosition+1, message.length());
-        }
-        else{
-          if(message.length() > 0){
-            servo_array[idx] = message.substring(0,commaPosition).toInt();
-          }
-        }
-        idx = idx + 1;
+//    Serial.println(message);
+
+    int commaPosition;
+    int idx = 0; 
+    int str_fg;
+    String char_fg;
+    char g;
+
+    bool validMessage = true;
+    for (int i = 0; i < 3; i++) {
+      commaPosition = message.indexOf(',');
+
+      if (commaPosition == -1 && i != 2) {
+        validMessage = false;
       }
-      while(commaPosition >=0);
       
-      int servo_number = servo_array[0];
-      int servo_angle_1 = servo_array[1];
-      int servo_angle_2 = servo_array[2]; 
-      
-      if (fg == 'g'){
-         Serial.print(fg);
-         Serial.print(",");
-         Serial.print(servo_angle_1);
-         Serial.print(",");
-         Serial.print(servo_angle_2);
-         Serial.print("\n");
-         sev_1.write(servo_angle_1);
-         delay(15);
-         sev_2.write(servo_angle_2); 
+      if (i != 0) {
+        int value = message.substring(0, commaPosition).toInt();
+        servo_array[i - 1] = value;
       }
-    } 
-  }
-      
-      int sev_currentangle_1 = sev_1.read();
-      int sev_currentangle_2 = sev_2.read();
-      Serial.print("f");
-      Serial.print(",");
-      Serial.print(sev_currentangle_1);
-      Serial.print(",");
-      Serial.print(sev_currentangle_2);
-      Serial.print("\n");
-      delay(5);
-  
+      message = message.substring(commaPosition + 1, message.length());
+    }
+
+    int servo_angle_1 = servo_array[0];
+    int servo_angle_2 = servo_array[1]; 
+     
+     sev_1.write(servo_angle_1);
+     delay(15);
+     sev_2.write(servo_angle_2); 
+     delay(15); 
+   }
+
+   else {
+    delay(50);   
+   }
+
+   int servo_angle_1 = sev_1.read();
+   int servo_angle_2 = sev_2.read();
+   Serial.print("f,");
+   Serial.print(servo_angle_1);
+   Serial.print(",");
+   Serial.print(servo_angle_2);
+   Serial.print("\n");
+
 }
+      
+//      int sev_currentangle_1 = sev_1.read();
+//      int sev_currentangle_2 = sev_2.read();
+//      Serial.print("f");
+//      Serial.print(",");
+//      Serial.print(sev_currentangle_1);
+//      Serial.print(",");
+//      Serial.print(sev_currentangle_2);
+//      Serial.print("\n");
+ 
